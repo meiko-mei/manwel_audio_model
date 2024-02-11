@@ -1,0 +1,8 @@
+0 down
+1 go
+2 left
+3 no
+4 right
+5 stop
+6 up
+7 yes
