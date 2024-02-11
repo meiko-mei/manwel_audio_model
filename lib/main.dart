@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:open_file/open_file.dart';
 import 'package:tflite_audio/tflite_audio.dart';
 import 'package:path_provider/path_provider.dart';
@@ -61,18 +62,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void getResult() async {
     if (newinputfile != null) {
-      String filePath = newinputfile!.path!;
-      var modelOutput = await TfliteAudio.startFileRecognition(
-        audioDirectory: filePath,
-        sampleRate: 16000,
-      );
-      modelOutput.listen((event) {
-        var recognition = event["recognitionResult"];
-      });
-      setState(() {
-        String recognition = _sound;
-      });
       print("File is processed");
+      // String filePath = newinputfile!.path!;
+      // var modelOutput = await TfliteAudio.startFileRecognition(
+      //   audioDirectory: filePath,
+      //   sampleRate: 16000,
+      // );
+      // modelOutput.listen((event) {
+      //   var recognition = event["recognitionResult"];
+      //   print('Output: ${recognition}');
+      // });
     }
   }
 
