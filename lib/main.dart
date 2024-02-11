@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 import 'package:tflite_audio/tflite_audio.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -26,6 +29,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String _sound = "Press the button to start";
   PlatformFile? _inputFile;
+  PlatformFile? newinputfile;
 
   get recognition => null;
 
@@ -48,9 +52,16 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<File> savePermanently(PlatformFile inputfile) async {
+    final appStorage = await getApplicationDocumentsDirectory();
+    final newinputfile = File('${appStorage.path}/${inputfile.name}');
+
+    return File(inputfile.path!).copy(newinputfile.path);
+  }
+
   void getResult() async {
-    if (_inputFile != null) {
-      String filePath = _inputFile!.path!;
+    if (newinputfile != null) {
+      String filePath = newinputfile!.path!;
       var modelOutput = await TfliteAudio.startFileRecognition(
         audioDirectory: filePath,
         sampleRate: 16000,
@@ -99,6 +110,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       _inputFile = inputfile.files.first;
                     });
                     openFile(_inputFile!.path);
+                    print('Path: ${inputfile.paths}');
+
+                    final newinputfile = await savePermanently(_inputFile!);
+
+                    print('Path: ${inputfile.paths}');
+                    print('NewPath: ${newinputfile.path}');
                   }
                 },
               ),
