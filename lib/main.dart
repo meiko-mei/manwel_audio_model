@@ -52,8 +52,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<File> savePermanently(PlatformFile inputfile) async {
     final appStorage = await getApplicationDocumentsDirectory();
+    print('App Storage Path: ${appStorage.path}');
+
     final newinputfile = File('${appStorage.path}/${inputfile.name}');
-    return File(inputfile.path!).copy(newinputfile.path);
+    print('New Input File Path: ${newinputfile.path}');
+
+    final copiedFile = await File(inputfile.path!).copy(newinputfile.path);
+    print('File copied successfully to: ${copiedFile.path}');
+
+    return copiedFile;
   }
 
   Future<void> getResult() async {
@@ -123,6 +130,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Text('Run through model'),
                 onPressed: getResult,
               ),
+              ElevatedButton(
+                  child: Text('Run'),
+                  onPressed: () {
+                    print('Output: $_inputFile');
+                  }),
               Text(
                 '$_sound',
                 style: Theme.of(context).textTheme.headline5!,
