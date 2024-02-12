@@ -53,12 +53,12 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<File?> savePermanently(PlatformFile inputfile) async {
     try {
       final appStorage = await getApplicationDocumentsDirectory();
-      final newInputFile = File('${appStorage.path}/${inputfile.name}');
+      final newInputFile = File('${appStorage.path}${inputfile.name}');
       print('APP STORAGE PATH: ${appStorage.path}');
 
       final copiedFile = await File(inputfile.path!).copy(newInputFile.path);
-      print('LOCATION ${appStorage.path}/${inputfile.name}})');
-      print('LOCATION COPIED FILE ${copiedFile.path}}');
+      print('LOCATION: ${appStorage.path}${inputfile.name}');
+      print('LOCATION COPIED FILE: ${copiedFile.path}');
 
       return copiedFile;
     } catch (e) {
