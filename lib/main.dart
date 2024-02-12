@@ -30,7 +30,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String _sound = "Press the button to start";
   PlatformFile? _inputFile;
-  PlatformFile? newinputfile;
 
   get recognition => null;
 
@@ -60,18 +59,20 @@ class _MyHomePageState extends State<MyHomePage> {
     return File(inputfile.path!).copy(newinputfile.path);
   }
 
-  void getResult() async {
+  getResult() async {
+    print("File is processed");
     if (newinputfile != null) {
-      print("File is processed");
-      // String filePath = newinputfile!.path!;
-      // var modelOutput = await TfliteAudio.startFileRecognition(
-      //   audioDirectory: filePath,
-      //   sampleRate: 16000,
-      // );
-      // modelOutput.listen((event) {
-      //   var recognition = event["recognitionResult"];
-      //   print('Output: ${recognition}');
-      // });
+      String filePath = newinputfile!.path!;
+      var modelOutput = await TfliteAudio.startFileRecognition(
+        audioDirectory: filePath,
+        sampleRate: 16000,
+      );
+      modelOutput.listen((event) {
+        var recognition = event["recognitionResult"];
+        print('Output: ${recognition}');
+      });
+    } else {
+      print('File is null');
     }
   }
 
