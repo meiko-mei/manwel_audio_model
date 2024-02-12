@@ -50,17 +50,21 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<File> savePermanently(PlatformFile inputfile) async {
-    final appStorage = await getApplicationDocumentsDirectory();
-    print('App Storage Path: ${appStorage.path}');
+  Future<File?> savePermanently(PlatformFile inputfile) async {
+    try {
+      final appStorage = await getApplicationDocumentsDirectory();
+      final newInputFile = File('${appStorage.path}/${inputfile.name}');
+      print('APP STORAGE PATH: ${appStorage.path}');
 
-    final newinputfile = File('${appStorage.path}/${inputfile.name}');
-    print('New Input File Path: ${newinputfile.path}');
+      final copiedFile = await File(inputfile.path!).copy(newInputFile.path);
+      print('LOCATION ${appStorage.path}/${inputfile.name}})');
+      print('LOCATION COPIED FILE ${copiedFile.path}}');
 
-    final copiedFile = await File(inputfile.path!).copy(newinputfile.path);
-    print('File copied successfully to: ${copiedFile.path}');
-
-    return copiedFile;
+      return copiedFile;
+    } catch (e) {
+      print('Error saving file: $e');
+      return null;
+    }
   }
 
   Future<void> getResult(String filepath) async {
@@ -114,21 +118,25 @@ class _MyHomePageState extends State<MyHomePage> {
               ElevatedButton(
                 child: Text('Pick File'),
                 onPressed: () async {
-                  final inputfile = await FilePicker.platform.pickFiles();
-                  if (inputfile != null && inputfile.files.isNotEmpty) {
-                    final firstFile = inputfile.files.first;
-                    final filePath = await savePermanently(firstFile);
-                    if (filePath != null) {
-                      setState(() {
-                        _inputFile = firstFile;
-                      });
-                      openFile(filePath.path);
-                      print('Path: ${filePath.path}');
-                      getResult(filePath
-                          .path); // Call getResult with the newInputFile path
-                    } else {
-                      print('Error saving file');
+                  try {
+                    final inputfile = await FilePicker.platform.pickFiles();
+                    if (inputfile != null && inputfile.files.isNotEmpty) {
+                      final firstFile = inputfile.files.first;
+                      final newInputFile = await savePermanently(firstFile);
+                      if (newInputFile != null) {
+                        setState(() {
+                          _inputFile = firstFile;
+                        });
+                        openFile(newInputFile.path);
+                        print('Path: ${newInputFile.path}');
+                        getResult(newInputFile
+                            .path); // Call getResult with the newInputFile path
+                      } else {
+                        print('Error saving file');
+                      }
                     }
+                  } catch (e) {
+                    print('Error picking file: $e');
                   }
                 },
               ),
@@ -138,7 +146,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   if (_inputFile != null) {
                     final newInputFile = await savePermanently(_inputFile!);
                     getResult(
-                        newInputFile.path); // Ensure newInputFile is not null
+                        newInputFile!.path); // Ensure newInputFile is not null
                   } else {
                     print('File is null');
                   }
