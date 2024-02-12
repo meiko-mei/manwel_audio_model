@@ -63,17 +63,15 @@ class _MyHomePageState extends State<MyHomePage> {
     return copiedFile;
   }
 
-  Future<void> getResult() async {
+  Future<void> getResult(String filepath) async {
     try {
-      if (_inputFile != null) {
-        final newInputFile = await savePermanently(_inputFile!);
-        String filePath = newInputFile.path;
+      if (filepath.isNotEmpty) {
         var modelOutput = await TfliteAudio.startFileRecognition(
-          audioDirectory: filePath,
+          audioDirectory: filepath,
           sampleRate: 16000,
         );
         modelOutput.listen((event) {
-          var recognition = event["recognitionResult"];
+          var recognition = event["recognitionResult"].toString();
           print('Output: $recognition');
           setState(() {
             _sound = recognition.toString();
@@ -118,17 +116,33 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () async {
                   final inputfile = await FilePicker.platform.pickFiles();
                   if (inputfile != null && inputfile.files.isNotEmpty) {
-                    setState(() {
-                      _inputFile = inputfile.files.first;
-                    });
-                    openFile(_inputFile!.path);
-                    print('Path: ${inputfile.paths}');
+                    final firstFile = inputfile.files.first;
+                    final filePath = await savePermanently(firstFile);
+                    if (filePath != null) {
+                      setState(() {
+                        _inputFile = firstFile;
+                      });
+                      openFile(filePath.path);
+                      print('Path: ${filePath.path}');
+                      getResult(filePath
+                          .path); // Call getResult with the newInputFile path
+                    } else {
+                      print('Error saving file');
+                    }
                   }
                 },
               ),
               ElevatedButton(
                 child: Text('Run through model'),
-                onPressed: getResult,
+                onPressed: () async {
+                  if (_inputFile != null) {
+                    final newInputFile = await savePermanently(_inputFile!);
+                    getResult(
+                        newInputFile.path); // Ensure newInputFile is not null
+                  } else {
+                    print('File is null');
+                  }
+                },
               ),
               ElevatedButton(
                   child: Text('Run'),
