@@ -31,8 +31,6 @@ class _MyHomePageState extends State<MyHomePage> {
   String _sound = "Press the button to start";
   PlatformFile? _inputFile;
 
-  get recognition => null;
-
   @override
   void initState() {
     super.initState();
@@ -55,24 +53,31 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<File> savePermanently(PlatformFile inputfile) async {
     final appStorage = await getApplicationDocumentsDirectory();
     final newinputfile = File('${appStorage.path}/${inputfile.name}');
-
     return File(inputfile.path!).copy(newinputfile.path);
   }
 
-  getResult() async {
-    print("File is processed");
-    if (newinputfile != null) {
-      String filePath = newinputfile!.path!;
-      var modelOutput = await TfliteAudio.startFileRecognition(
-        audioDirectory: filePath,
-        sampleRate: 16000,
-      );
-      modelOutput.listen((event) {
-        var recognition = event["recognitionResult"];
-        print('Output: ${recognition}');
-      });
-    } else {
-      print('File is null');
+  Future<void> getResult() async {
+    try {
+      if (_inputFile != null) {
+        final newInputFile = await savePermanently(_inputFile!);
+        String filePath = newInputFile.path;
+        var modelOutput = await TfliteAudio.startFileRecognition(
+          audioDirectory: filePath,
+          sampleRate: 16000,
+        );
+        modelOutput.listen((event) {
+          var recognition = event["recognitionResult"];
+          print('Output: $recognition');
+          setState(() {
+            _sound = recognition.toString();
+          });
+        });
+        print("File is processed");
+      } else {
+        print('File is null');
+      }
+    } catch (e) {
+      print('Error processing file: $e');
     }
   }
 
@@ -111,11 +116,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     });
                     openFile(_inputFile!.path);
                     print('Path: ${inputfile.paths}');
-
-                    final newinputfile = await savePermanently(_inputFile!);
-
-                    print('Path: ${inputfile.paths}');
-                    print('NewPath: ${newinputfile.path}');
                   }
                 },
               ),
