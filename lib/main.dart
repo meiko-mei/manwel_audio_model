@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:open_file/open_file.dart';
+// import 'package:open_file/open_file.dart';
 import 'package:tflite_audio/tflite_audio.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -27,6 +27,34 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+Future<void> createDirectory() async {
+  final directory =
+      await getApplicationDocumentsDirectory(); // Use getExternalStorageDirectory() for external storage
+  final myDir = Directory('${directory.path}/myCustomDir');
+  if (!await myDir.exists()) {
+    await myDir.create(
+        recursive:
+            true); // Creates the directory and any non-existent parent directories
+    print('created directory');
+  } else
+    () {
+      print('error creating directory');
+    };
+}
+
+class FileOpener {
+  static const platform =
+      MethodChannel('com.example.audio_recognition_appliction');
+
+  static Future<void> openFile(String filePath) async {
+    try {
+      await platform.invokeMethod('openFile', {'filePath': filePath});
+    } on PlatformException catch (e) {
+      print("Failed to open file: '${e.message}'.");
+    }
+  }
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   String _sound = "Press the button to start";
   PlatformFile? _inputFile;
@@ -41,13 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
       numThreads: 1,
       isAsset: true,
     );
-  }
-
-  void openFile(String? filePath) {
-    if (filePath != null) {
-      OpenFile.open(filePath);
-      print("File is playing");
-    }
+    createDirectory();
   }
 
   Future<File?> savePermanently(PlatformFile inputfile) async {
@@ -63,15 +85,15 @@ class _MyHomePageState extends State<MyHomePage> {
       return copiedFile;
     } catch (e) {
       print('Error saving file: $e');
-      return null;
     }
+    return null;
   }
 
-  Future<void> getResult(String filepath) async {
+  Future<void> getResult(String newInputFile) async {
     try {
-      if (filepath.isNotEmpty) {
+      if (newInputFile.isNotEmpty) {
         var modelOutput = await TfliteAudio.startFileRecognition(
-          audioDirectory: filepath,
+          audioDirectory: newInputFile,
           sampleRate: 16000,
         );
         modelOutput.listen((event) {
@@ -127,7 +149,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         setState(() {
                           _inputFile = firstFile;
                         });
-                        openFile(newInputFile.path);
                         print('Path: ${newInputFile.path}');
                         getResult(newInputFile
                             .path); // Call getResult with the newInputFile path
@@ -155,7 +176,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ElevatedButton(
                   child: Text('Run'),
                   onPressed: () {
-                    print('Output: $_inputFile');
+                    createDirectory();
                   }),
               Text(
                 '$_sound',
