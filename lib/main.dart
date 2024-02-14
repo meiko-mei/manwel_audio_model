@@ -57,7 +57,9 @@ class FileOpener {
 
 class _MyHomePageState extends State<MyHomePage> {
   String _sound = "Press the button to start";
-  PlatformFile? _inputFile;
+  String? fileLocation;
+
+  get path => null;
 
   @override
   void initState() {
@@ -72,40 +74,42 @@ class _MyHomePageState extends State<MyHomePage> {
     createDirectory();
   }
 
-  Future<File?> savePermanently(PlatformFile inputfile) async {
+  // Future<File?> savePermanently(PlatformFile inputfile) async {
+  //   try {
+  //     final appStorage = await getApplicationDocumentsDirectory();
+  //     final newInputFile = File('${appStorage.path}${inputfile.name}');
+  //     print('APP STORAGE PATH: ${appStorage.path}');
+
+  //     final copiedFile = await File(inputfile.path!).copy(newInputFile.path);
+  //     print('LOCATION: ${appStorage.path}${inputfile.name}');
+  //     print('LOCATION COPIED FILE: ${copiedFile.path}');
+
+  //     return copiedFile;
+  //   } catch (e) {
+  //     print('Error saving file: $e');
+  //   }
+  //   return null;
+  // }
+
+  Future<void> getResult(String fileLocation) async {
     try {
-      final appStorage = await getApplicationDocumentsDirectory();
-      final newInputFile = File('${appStorage.path}${inputfile.name}');
-      print('APP STORAGE PATH: ${appStorage.path}');
-
-      final copiedFile = await File(inputfile.path!).copy(newInputFile.path);
-      print('LOCATION: ${appStorage.path}${inputfile.name}');
-      print('LOCATION COPIED FILE: ${copiedFile.path}');
-
-      return copiedFile;
-    } catch (e) {
-      print('Error saving file: $e');
-    }
-    return null;
-  }
-
-  Future<void> getResult(String newInputFile) async {
-    try {
-      if (newInputFile.isNotEmpty) {
+      print("File File location: $fileLocation");
+      if (fileLocation.isNotEmpty) {
         var modelOutput = await TfliteAudio.startFileRecognition(
-          audioDirectory: newInputFile,
+          audioDirectory: fileLocation,
           sampleRate: 16000,
         );
+
         modelOutput.listen((event) {
           var recognition = event["recognitionResult"].toString();
           print('Output: $recognition');
-          setState(() {
-            _sound = recognition.toString();
-          });
+          // setState(() {
+          //   _sound = recognition.toString();
         });
-        print("File is processed");
-      } else {
-        print('File is null');
+        // });
+        //   print("File is processed");
+        // } else {
+        //   print('File is null');
       }
     } catch (e) {
       print('Error processing file: $e');
@@ -137,24 +141,32 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
               ),
+              // ElevatedButton(
+              //   child: Text('Pick File'),
+              //   onPressed: () async {
+              //     try {
+              //       final pickedFile = await FilePicker.platform.pickFiles();
+              //       if (pickedFile != null) {
+              //         final directory =
+              //             await getApplicationDocumentsDirectory();
+              //         print('File saved to $directory');
+              //       }
+              //     } catch (e) {
+              //       print('Error picking file: $e');
+              //     }
+              //   },
+              // ),
+
               ElevatedButton(
                 child: Text('Pick File'),
                 onPressed: () async {
                   try {
-                    final inputfile = await FilePicker.platform.pickFiles();
-                    if (inputfile != null && inputfile.files.isNotEmpty) {
-                      final firstFile = inputfile.files.first;
-                      final newInputFile = await savePermanently(firstFile);
-                      if (newInputFile != null) {
-                        setState(() {
-                          _inputFile = firstFile;
-                        });
-                        print('Path: ${newInputFile.path}');
-                        getResult(newInputFile
-                            .path); // Call getResult with the newInputFile path
-                      } else {
-                        print('Error saving file');
-                      }
+                    final pickedFile = await FilePicker.platform.pickFiles();
+                    if (pickedFile != null) {
+                      fileLocation = pickedFile
+                          .files.single.path; // Save the file location
+                      print('File location: $fileLocation');
+                      print('Test Path: ${pickedFile.paths}');
                     }
                   } catch (e) {
                     print('Error picking file: $e');
@@ -162,17 +174,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ),
               ElevatedButton(
-                child: Text('Run through model'),
-                onPressed: () async {
-                  if (_inputFile != null) {
-                    final newInputFile = await savePermanently(_inputFile!);
-                    getResult(
-                        newInputFile!.path); // Ensure newInputFile is not null
-                  } else {
-                    print('File is null');
-                  }
-                },
-              ),
+                  child: Text('Use File Location'),
+                  onPressed: () {
+                    if (fileLocation != null) {
+                      print(
+                          'File location from previous selection: $fileLocation');
+                      getResult(fileLocation!);
+                      // Use the file location here or perform any other action
+                    } else {
+                      print('No file location available.');
+                    }
+                  }),
               ElevatedButton(
                   child: Text('Run'),
                   onPressed: () {
