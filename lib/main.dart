@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -59,6 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String _sound = "Press the button to start";
   String? fileLocation;
 
+  Stream<Map<dynamic, dynamic>>? recognitionStream;
   get path => null;
 
   @override
@@ -66,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     TfliteAudio.loadModel(
       inputType: 'decodedWav',
-      model: 'assets/saved_model.tflite',
+      model: 'assets/model.tflite',
       label: 'assets/labels.txt',
       numThreads: 1,
       isAsset: true,
@@ -90,30 +92,25 @@ class _MyHomePageState extends State<MyHomePage> {
   //   }
   //   return null;
   // }
+  void getResult() async {
+    print("||||| PROCESSING FILE |||||");
+    recognitionStream = TfliteAudio.startFileRecognition(
+      audioDirectory: 'assets/audio/audio_1.wav',
+      sampleRate: 16000,
+      // audioLength: audioLength,
+      // detectionThreshold: detectionThreshold,
+      // averageWindowDuration: averageWindowDuration,
+      // minimumTimeBetweenSamples: minimumTimeBetweenSamples,
+      // suppressionTime: suppressionTime,
+    );
 
-  Future<void> getResult(String fileLocation) async {
-    try {
-      print("File File location: $fileLocation");
-      if (fileLocation.isNotEmpty) {
-        var modelOutput = await TfliteAudio.startFileRecognition(
-          audioDirectory: fileLocation,
-          sampleRate: 16000,
-        );
+    String result = '';
+    int inferenceTime = 0;
 
-        modelOutput.listen((event) {
-          var recognition = event["recognitionResult"].toString();
-          print('Output: $recognition');
-          // setState(() {
-          //   _sound = recognition.toString();
-        });
-        // });
-        //   print("File is processed");
-        // } else {
-        //   print('File is null');
-      }
-    } catch (e) {
-      print('Error processing file: $e');
-    }
+    recognitionStream?.listen((event) {
+      result = event["inferenceTime"];
+      inferenceTime = event["recognitionResult"];
+    }).onDone();
   }
 
   @override
@@ -176,19 +173,13 @@ class _MyHomePageState extends State<MyHomePage> {
               ElevatedButton(
                   child: Text('Use File Location'),
                   onPressed: () {
-                    if (fileLocation != null) {
-                      print(
-                          'File location from previous selection: $fileLocation');
-                      getResult(fileLocation!);
-                      // Use the file location here or perform any other action
-                    } else {
-                      print('No file location available.');
-                    }
+                    getResult();
+                    // Use the file location here or perform any other action
                   }),
               ElevatedButton(
                   child: Text('Run'),
                   onPressed: () {
-                    createDirectory();
+                    getResult();
                   }),
               Text(
                 '$_sound',
