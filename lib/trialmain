@@ -1,0 +1,105 @@
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:tflite/tflite.dart';
+
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: AudioInferencePage(),
+    );
+  }
+}
+
+class AudioInferencePage extends StatefulWidget {
+  @override
+  _AudioInferencePageState createState() => _AudioInferencePageState();
+}
+
+class _AudioInferencePageState extends State<AudioInferencePage> {
+  List<dynamic>? _output;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadModel();
+  }
+
+  void _loadModel() async {
+    setState(() {
+      _isLoading = true;
+    });
+    await Tflite.loadModel(
+      model: 'assets/model.tflite',
+      labels: 'assets/labels.txt',
+    );
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void _runInference(Uint8List audioData) async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+print("||||| PROCESSING FILE |||||");
+    recognitionStream = TfliteAudio.startFileRecognition(
+      audioDirectory: 'assets/audio/audio_1.wav',
+      sampleRate: 16000,)
+
+    // Preprocess audio data if needed (e.g., resampling, normalization)
+    // You'll need to implement this according to your model's input requirements.
+
+    // Run inference
+    List<dynamic>? output = await Tflite.runModelOnBinary(
+      binary: audioData,
+    );
+
+    // Interpret output
+    setState(() {
+      _output = output;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Audio Inference'),
+      ),
+      body: Center(
+        child: _isLoading
+            ? CircularProgressIndicator()
+            : _output == null
+                ? Text('No output yet')
+                : Text(_output!.toString()),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Simulate audio data (replace with actual audio data retrieval)
+          Uint8List audioData = _generateDummyAudioData();
+          _runInference(audioData);
+        },
+        child: Icon(Icons.mic),
+      ),
+    );
+  }
+
+  // Dummy method to generate audio data for simulation purposes
+  Uint8List _generateDummyAudioData() {
+    // Replace this with your actual audio data retrieval mechanism
+    return Uint8List(44100); // Dummy data for 1 second of audio at 44.1 kHz
+  }
+
+  @override
+  void dispose() {
+    Tflite.close();
+    super.dispose();
+  }
+}

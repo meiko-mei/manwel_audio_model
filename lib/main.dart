@@ -70,10 +70,10 @@ class _MyHomePageState extends State<MyHomePage> {
       inputType: 'decodedWav',
       model: 'assets/model.tflite',
       label: 'assets/labels.txt',
+      outputRawScores: false,
       numThreads: 1,
       isAsset: true,
     );
-    createDirectory();
   }
 
   // Future<File?> savePermanently(PlatformFile inputfile) async {
@@ -92,26 +92,6 @@ class _MyHomePageState extends State<MyHomePage> {
   //   }
   //   return null;
   // }
-  void getResult() async {
-    print("||||| PROCESSING FILE |||||");
-    recognitionStream = TfliteAudio.startFileRecognition(
-      audioDirectory: 'assets/audio/audio_1.wav',
-      sampleRate: 16000,
-      // audioLength: audioLength,
-      // detectionThreshold: detectionThreshold,
-      // averageWindowDuration: averageWindowDuration,
-      // minimumTimeBetweenSamples: minimumTimeBetweenSamples,
-      // suppressionTime: suppressionTime,
-    );
-
-    String result = '';
-    int inferenceTime = 0;
-
-    recognitionStream?.listen((event) {
-      result = event["inferenceTime"];
-      inferenceTime = event["recognitionResult"];
-    }).onDone();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -190,5 +170,21 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+  }
+
+  void getResult() {
+    print("||||| PROCESSING FILE |||||");
+    recognitionStream = TfliteAudio.startFileRecognition(
+      audioDirectory: 'assets/audio/audio_1.wav',
+      sampleRate: 16000,
+      audioLength: 1,
+      detectionThreshold: 0.3,
+      averageWindowDuration: 1000,
+      minimumTimeBetweenSamples: 30,
+      suppressionTime: 1500,
+    );
+
+    recognitionStream?.listen((event) =>
+        print("Recognition Result: " + event["recognitionResult"].toString()));
   }
 }
